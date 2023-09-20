@@ -1,9 +1,11 @@
 package hanghackathon.lookids.look.repository;
 
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import hanghackathon.lookids.global.security.UserDetailsImpl;
+import hanghackathon.lookids.likes.LikesRepository;
+import hanghackathon.lookids.look.Look;
 import hanghackathon.lookids.look.dto.LookResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -20,16 +22,26 @@ import static hanghackathon.lookids.look.QLook.look;
 public class LookCustomRepositoryImpl implements LookCustomRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final LikesRepository likesRepository;
 
-    public Slice<LookResponseDto> paginationByRandom(String type, Long lastLookId, Pageable pageable) {
-        List<LookResponseDto> result = queryFactory
-                .select(Projections.constructor(LookResponseDto.class, look))
-                .from(look)
+    public Slice<LookResponseDto> paginationByRandom(String type, Long lastLookId, Pageable pageable, UserDetailsImpl userDetails) {
+        List<Look> looks = queryFactory
+                .selectFrom(look)
                 .where(checkType(type),
                         ltLookId(lastLookId))
                 .orderBy(NumberExpression.random().asc())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
+
+        // 좋아요 상태 반환
+        List<LookResponseDto> result = looks.stream().map((look) -> {
+            boolean isLiked = false;
+            if (userDetails != null) {
+                Long userId = userDetails.getUser().getId();
+                isLiked = likesRepository.getLikeStatusByUserAndLook(userId, look.getId());
+            }
+            return LookResponseDto.toDto(look, isLiked);
+        }).toList();
 
         return checkLastPage(pageable, result);
     }
