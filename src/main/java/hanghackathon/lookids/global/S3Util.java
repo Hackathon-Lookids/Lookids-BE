@@ -1,6 +1,11 @@
 package hanghackathon.lookids.global;
 
+import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +23,38 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class S3Util {
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+    @Value("${cloud.aws.credentials.access-key}")
+    private String accessKey;
 
-    private final AmazonS3 amazonS3;
+    @Value("${cloud.aws.credentials.secret-key}")
+    private String secretKey;
 
-    public List<String> uploadFile(List<MultipartFile> multipartFileList) throws IOException {
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
+    @Value("${cloud.aws.s3.endpoint}")
+    private String endPoint;
+
+    public List<String> uploadFile(List<MultipartFile> multipartFileList) {
+
+        final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, region))
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+                .build();
+
+        String bucketName = "lookids";
+
+        try {
+            // create bucket if the bucket name does not exist
+            if (s3.doesBucketExistV2(bucketName)) {
+                System.out.format("Bucket %s already exists.\n", bucketName);
+            } else {
+                s3.createBucket(bucketName);
+                System.out.format("Bucket %s has been created.\n", bucketName);
+            }
+        } catch(SdkClientException e) {
+            e.printStackTrace();
+        }
 
         List<String> imageUrlList = new ArrayList<>();
         for (MultipartFile image : multipartFileList) {
@@ -33,12 +64,11 @@ public class S3Util {
             try {
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentLength(image.getSize());
-                amazonS3.putObject(new PutObjectRequest(bucket, fileName, image.getInputStream(), metadata));
+                s3.putObject(new PutObjectRequest(bucketName, fileName, image.getInputStream(), metadata));
             } catch (IOException e) {
                 throw new RuntimeException("failed to upload image : " + fileName, e);
             }
-            imageUrlList.add(amazonS3.getUrl(bucket, fileName).toString());
-
+            imageUrlList.add(s3.getUrl(bucketName, fileName).toString());
         }
         return imageUrlList;
     }
