@@ -6,7 +6,6 @@ import hanghackathon.lookids.global.constant.LookType;
 import hanghackathon.lookids.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +29,7 @@ public class Look extends AuditingEntity {
     @Enumerated(EnumType.STRING)
     private LookType lookType;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     @Convert(converter = StringListConverter.class)
     private List<String> imageUrls;
 
@@ -39,7 +38,6 @@ public class Look extends AuditingEntity {
     private String content;
 
     @Setter
-    @ColumnDefault("0")
     private Integer likeCount;
 
     @Builder
@@ -49,6 +47,7 @@ public class Look extends AuditingEntity {
         this.imageUrls = imageUrls;
         this.title = title;
         this.content = content;
+        likeCount = 0;
     }
 
     @Override

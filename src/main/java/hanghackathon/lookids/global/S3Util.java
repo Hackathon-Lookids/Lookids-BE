@@ -46,11 +46,8 @@ public class S3Util {
 
         try {
             // create bucket if the bucket name does not exist
-            if (s3.doesBucketExistV2(bucketName)) {
-                System.out.format("Bucket %s already exists.\n", bucketName);
-            } else {
+            if (!s3.doesBucketExistV2(bucketName)) {
                 s3.createBucket(bucketName);
-                System.out.format("Bucket %s has been created.\n", bucketName);
             }
         } catch(SdkClientException e) {
             e.printStackTrace();

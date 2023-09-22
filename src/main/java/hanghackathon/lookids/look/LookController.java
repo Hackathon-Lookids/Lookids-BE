@@ -34,7 +34,7 @@ public class LookController {
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseDto<?> createLook(
-            @RequestPart LookRequestDto lookRequestDto,
+            @RequestPart(value = "look") LookRequestDto lookRequestDto,
             @RequestPart(value = "imageFile", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) throws IOException {
