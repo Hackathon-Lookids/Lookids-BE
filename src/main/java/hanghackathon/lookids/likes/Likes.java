@@ -21,11 +21,21 @@ public class Likes {
     @ColumnDefault("false")
     private boolean likeStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "look_id", nullable = false)
     private Look look;
+
+    protected Likes(boolean likeStatus, User user, Look look) {
+        this.likeStatus = likeStatus;
+        this.user = user;
+        this.look = look;
+    }
+
+    public static Likes of(boolean likeStatus, User user, Look look) {
+        return new Likes(likeStatus, user, look);
+    }
 }

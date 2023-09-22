@@ -22,9 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
-import static hanghackathon.lookids.global.constant.ErrorCode.BAD_REQUEST;
 import static hanghackathon.lookids.global.constant.ErrorCode.UNAUTHORIZED;
+import static hanghackathon.lookids.global.constant.ErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -59,12 +60,18 @@ public class LookService {
 
     @Transactional
     public LookResponseDto createLook(LookRequestDto lookRequestDto, List<MultipartFile> images, UserDetailsImpl userDetails) throws IOException {
+        if (userDetails == null) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
         User user = userDetails.getUser();
+
         userRepository.findById(userDetails.getUser().getId()).orElseThrow(
                 () -> new CustomException(UNAUTHORIZED)
         );
 
         List<String> imageUrls = s3Util.uploadFile(images);
+
+        System.out.println(imageUrls.toString());
 
         Look look = Look.builder()
                 .user(user)
@@ -81,15 +88,29 @@ public class LookService {
 
     @Transactional
     public LikesDto likeLook(Long lookId, UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
+        User user = userDetails.getUser();
+
         Look look = lookRepository.findById(lookId)
                 .orElseThrow(() -> new IllegalArgumentException("no such look exists"));
 
-        Likes likes = likesRepository.findByUserIdAndLookId(userDetails.getUser().getId(), lookId)
-                .orElseThrow(() -> new CustomException(BAD_REQUEST));
+        Optional<Likes> optionalLikes = likesRepository.findByUserIdAndLookId(user.getId(), lookId);
 
-        likes.setLikeStatus(!likes.isLikeStatus());
-        look.setLikeCount(look.getLikeCount() + 1);
-
+        Likes likes;
+        if (optionalLikes.isPresent()) {
+            likes = optionalLikes.get();
+            if (likes.isLikeStatus()) {
+                likes.setLikeStatus(false);
+                look.setLikeCount(look.getLikeCount() + 1);
+            } else {
+                likes.setLikeStatus(true);
+                look.setLikeCount(look.getLikeCount() - 1);
+            }
+        } else {
+            likes = likesRepository.save(Likes.of(false, user, look));
+        }
         return LikesDto.of(look.getLikeCount(), likes.isLikeStatus());
     }
 }
