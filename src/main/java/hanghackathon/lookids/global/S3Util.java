@@ -6,6 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -35,7 +38,7 @@ public class S3Util {
     @Value("${cloud.aws.s3.endpoint}")
     private String endPoint;
 
-    public List<String> uploadFile(List<MultipartFile> multipartFileList) {
+    public List<String> uploadFile(List<MultipartFile> multipartFileList) throws IOException {
 
         final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, region))
@@ -49,23 +52,33 @@ public class S3Util {
             if (!s3.doesBucketExistV2(bucketName)) {
                 s3.createBucket(bucketName);
             }
-        } catch(SdkClientException e) {
+        } catch (SdkClientException e) {
             e.printStackTrace();
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        int hour = now.getHour();
+        int minute = now.getMinute();
+        int second = now.getSecond();
+        int millis = now.get(ChronoField.MILLI_OF_SECOND);
+
         List<String> imageUrlList = new ArrayList<>();
         for (MultipartFile image : multipartFileList) {
-            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-            log.info(fileName);
 
-            try {
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(image.getSize());
-                s3.putObject(new PutObjectRequest(bucketName, fileName, image.getInputStream(), metadata));
-            } catch (IOException e) {
-                throw new RuntimeException("failed to upload image : " + fileName, e);
-            }
-            imageUrlList.add(s3.getUrl(bucketName, fileName).toString());
+            String imageName = "image" + hour + minute + second + millis;
+            String fileExtension = '.' + image.getOriginalFilename().replaceAll("^.*\\.(.*)$", "$1");
+            String fullImageName = "S3" + imageName + fileExtension;
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentType(image.getContentType());
+            objectMetadata.setContentLength(image.getSize());
+
+            InputStream inputStream = image.getInputStream();
+
+            s3.putObject(new PutObjectRequest(bucketName, fullImageName, inputStream, objectMetadata)
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
+
+            imageUrlList.add(s3.getUrl(bucketName, fullImageName).toString());
         }
         return imageUrlList;
     }
