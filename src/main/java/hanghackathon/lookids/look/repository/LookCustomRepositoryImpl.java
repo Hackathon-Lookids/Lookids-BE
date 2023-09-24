@@ -35,16 +35,15 @@ public class LookCustomRepositoryImpl implements LookCustomRepository {
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
-        log.info("query fetched");
 
-        // 좋아요 상태 반환
+        // 좋아요 상태값 추가
         List<LookResponseDto> result = looks.stream().map((look) -> {
             boolean isLiked = false;
             if (userDetails != null) {
                 Long userId = userDetails.getUser().getId();
                 isLiked = likesRepository.getLikeStatusByUserAndLook(userId, look.getId());
             }
-            return LookResponseDto.toDto(look, isLiked);
+            return LookResponseDto.of(look, isLiked);
         }).toList();
 
         return checkLastPage(pageable, result);

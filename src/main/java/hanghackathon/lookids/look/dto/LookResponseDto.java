@@ -34,7 +34,7 @@ public record LookResponseDto(
         );
     }
 
-    public static LookResponseDto toDto(Look look, boolean likeStatus) {
+    public static LookResponseDto of(Look look, boolean likeStatus) {
         return LookResponseDto.of(
                 look.getLookType(),
                 look.getImageUrls(),

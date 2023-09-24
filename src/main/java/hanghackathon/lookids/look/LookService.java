@@ -12,7 +12,6 @@ import hanghackathon.lookids.look.dto.LookResponseDto;
 import hanghackathon.lookids.look.dto.MainLookDto;
 import hanghackathon.lookids.look.repository.LookRepository;
 import hanghackathon.lookids.user.User;
-import hanghackathon.lookids.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static hanghackathon.lookids.global.constant.ErrorCode.UNAUTHORIZED;
 import static hanghackathon.lookids.global.constant.ErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -32,7 +30,6 @@ import static hanghackathon.lookids.global.constant.ErrorCode.USER_NOT_FOUND;
 public class LookService {
 
     private final LookRepository lookRepository;
-    private final UserRepository userRepository;
     private final LikesRepository likesRepository;
     private final S3Util s3Util;
 
@@ -49,7 +46,7 @@ public class LookService {
                         Long userId = userDetails.getUser().getId();
                         isLiked = likesRepository.getLikeStatusByUserAndLook(userId, look.getId());
                     }
-                    return LookResponseDto.toDto(look, isLiked);
+                    return LookResponseDto.of(look, isLiked);
                 }).toList();
 
         return MainLookDto.of(
@@ -65,25 +62,19 @@ public class LookService {
         }
         User user = userDetails.getUser();
 
-        userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-                () -> new CustomException(UNAUTHORIZED)
-        );
-
         List<String> imageUrls = s3Util.uploadFile(images);
 
-        System.out.println(imageUrls.toString());
+        Look look = lookRepository.save(
+                Look.builder()
+                        .user(user)
+                        .lookType(lookRequestDto.lookType())
+                        .imageUrls(imageUrls)
+                        .title(lookRequestDto.title())
+                        .content(lookRequestDto.content())
+                        .build()
+        );
 
-        Look look = Look.builder()
-                .user(user)
-                .lookType(lookRequestDto.lookType())
-                .imageUrls(imageUrls)
-                .title(lookRequestDto.title())
-                .content(lookRequestDto.content())
-                .build();
-
-        lookRepository.save(look);
-
-        return LookResponseDto.toDto(look, false);
+        return LookResponseDto.of(look, false);
     }
 
     @Transactional

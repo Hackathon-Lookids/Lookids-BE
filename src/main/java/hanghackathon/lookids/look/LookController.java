@@ -2,7 +2,9 @@ package hanghackathon.lookids.look;
 
 import hanghackathon.lookids.global.ResponseDto;
 import hanghackathon.lookids.global.security.UserDetailsImpl;
+import hanghackathon.lookids.likes.LikesDto;
 import hanghackathon.lookids.look.dto.LookRequestDto;
+import hanghackathon.lookids.look.dto.LookResponseDto;
 import hanghackathon.lookids.look.dto.MainLookDto;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,7 @@ public class LookController {
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public ResponseDto<?> createLook(
+    public ResponseDto<LookResponseDto> createLook(
             @RequestPart(value = "look") LookRequestDto lookRequestDto,
             @RequestPart(value = "imageFile", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal UserDetailsImpl userDetails
@@ -44,8 +46,8 @@ public class LookController {
     }
 
     @PatchMapping("/{lookId}/likes")
-    public ResponseDto<?> likeLook(
-            @PathVariable Long lookId,
+    public ResponseDto<LikesDto> likeLook(
+            @PathVariable("lookId") Long lookId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         return ResponseDto.setSuccess("좋아요 성공", lookService.likeLook(lookId, userDetails));

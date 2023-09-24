@@ -1,7 +1,9 @@
 package hanghackathon.lookids.user;
 
+import jakarta.validation.constraints.Email;
+
 public record UserDto(
-        String email,
+        @Email String email,
         String nickname
 ) {
     public static UserDto of(

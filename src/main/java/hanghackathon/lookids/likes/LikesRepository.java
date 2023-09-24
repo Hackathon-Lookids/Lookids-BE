@@ -11,5 +11,5 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
     Optional<Likes> findByUserIdAndLookId(Long userId, Long lookId);
 
     @Query(value = "SELECT l.likeStatus FROM Likes l WHERE l.user.id = :userId AND l.look.id = :lookId")
-    boolean getLikeStatusByUserAndLook(@Param("userId") Long userId, @Param("lookId") Long lookId);
+    Boolean getLikeStatusByUserAndLook(@Param("userId") Long userId, @Param("lookId") Long lookId);
 }
