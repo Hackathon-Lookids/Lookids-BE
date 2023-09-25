@@ -62,6 +62,7 @@ public class PostService {
         return PostResponseDto.of(post, null);
     }
 
+    @Transactional
     public CommentResponseDto commentPost(Long postId, CommentRequestDto commentRequestDto, UserDetailsImpl userDetails) {
         if (userDetails == null) {
             throw new CustomException(USER_NOT_FOUND);
