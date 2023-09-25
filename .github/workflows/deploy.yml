@@ -36,7 +36,8 @@ jobs:
     - name: web docker build and push
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker build -t ${{ secrets.DOCKER_REPO }}/lookids .
+        docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_REPO }}/lookids .
+        docker images
         docker push ${{ secrets.DOCKER_REPO }}/lookids
     # NCP 로그인 / docker image pull & run
     - name: NCP login and docker image pull and run
