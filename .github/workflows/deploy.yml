@@ -6,7 +6,7 @@ on:
     branches:
       - develop
 jobs:
-  Auto-Deploy:
+  build-gradle:
     runs-on: ubuntu-latest
     steps:
     # 체크아웃 및 JDK 세팅
@@ -47,7 +47,13 @@ jobs:
         tags: ${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids:latest
         cache-from: type=registry,ref=${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids:latest
         cache-to: type=inline
-    - name: Connect server ssh and pull from container registry
+
+  deploy:
+    name: Connect server ssh and pull from container registry
+    needs: build-gradle
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pull image
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.NCP_HOST }}
