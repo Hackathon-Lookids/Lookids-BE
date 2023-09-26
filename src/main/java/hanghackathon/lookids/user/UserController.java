@@ -34,9 +34,4 @@ public class UserController {
         response.setHeader(JwtUtil.AUTHORIZATION_HEADER, token);
         return "token issued";
     }
-
-    @GetMapping("/test")
-    public String test() {
-        return "test";
-    }
 }
