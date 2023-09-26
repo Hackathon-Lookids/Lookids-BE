@@ -6,7 +6,7 @@ on:
       - develop
 
 jobs:
-  build-with-gradle:
+  Auto-Deploy:
     runs-on: ubuntu-latest
     steps:
     # 체크아웃 및 JDK 세팅
