@@ -1,5 +1,6 @@
 name: Auto deploy to NCP
 run-name: Running
+
 on:
   push:
     branches:
