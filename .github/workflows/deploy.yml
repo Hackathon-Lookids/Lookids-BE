@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - develop
-
 jobs:
   Auto-Deploy:
     runs-on: ubuntu-latest
@@ -45,8 +44,8 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name:latest
-        cache-from: type=registry,ref=${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name:latest
+        tags: ${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids:latest
+        cache-from: type=registry,ref=${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids:latest
         cache-to: type=inline
     - name: Connect server ssh and pull from container registry
       uses: appleboy/ssh-action@master
@@ -56,8 +55,8 @@ jobs:
         password: ${{ secrets.NCP_PASSWORD }}
         port: ${{ secrets.NCP_PORT }}
         script: |
-          docker pull ${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name
+          docker pull ${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids
           docker stop $(docker ps -a -q)
           docker rm $(docker ps -a -q)
-          docker run -d -p 8080:80 ${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name
+          docker run -d -p 8080:80 ${{ secrets.NCP_CONTAINER_REGISTRY }}/lookids
           docker image prune -f
