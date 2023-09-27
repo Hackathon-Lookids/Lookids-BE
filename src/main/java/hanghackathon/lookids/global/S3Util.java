@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -64,10 +65,14 @@ public class S3Util {
 
         List<String> imageUrlList = new ArrayList<>();
         for (MultipartFile image : multipartFileList) {
+            System.out.println("image.toString()" + image.toString());
 
-            String imageName = "image" + hour + minute + second + millis;
+//            String imageName = "image" + hour + minute + second + millis;
+            String imageName = "image" + UUID.randomUUID();
             String fileExtension = '.' + image.getOriginalFilename().replaceAll("^.*\\.(.*)$", "$1");
             String fullImageName = "S3" + imageName + fileExtension;
+
+            System.out.println("fullImageName" + fullImageName);
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentType(image.getContentType());
