@@ -10,6 +10,6 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
 
     Optional<Likes> findByUserIdAndLookId(Long userId, Long lookId);
 
-    @Query(value = "SELECT l.likeStatus FROM Likes l WHERE l.user.id = :userId AND l.look.id = :lookId")
+    @Query(value = "SELECT COALESCE(l.likeStatus, false) FROM Likes l WHERE l.user.id = :userId AND l.look.id = :lookId")
     Boolean getLikeStatusByUserAndLook(@Param("userId") Long userId, @Param("lookId") Long lookId);
 }
