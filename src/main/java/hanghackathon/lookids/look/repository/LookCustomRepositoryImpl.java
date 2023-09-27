@@ -41,7 +41,7 @@ public class LookCustomRepositoryImpl implements LookCustomRepository {
             boolean isLiked = false;
             if (userDetails != null) {
                 Long userId = userDetails.getUser().getId();
-                isLiked = likesRepository.getLikeStatusByUserAndLook(userId, look.getId());
+                isLiked = likesRepository.getLikeStatusByUserAndLook(userId, look.getId()).orElse(false);
             }
             return LookResponseDto.of(look, isLiked);
         }).toList();
