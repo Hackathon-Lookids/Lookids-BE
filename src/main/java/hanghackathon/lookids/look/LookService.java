@@ -94,13 +94,14 @@ public class LookService {
             likes = optionalLikes.get();
             if (likes.isLikeStatus()) {
                 likes.setLikeStatus(false);
-                look.setLikeCount(look.getLikeCount() + 1);
+                look.setLikeCount(look.getLikeCount() - 1);
             } else {
                 likes.setLikeStatus(true);
-                look.setLikeCount(look.getLikeCount() - 1);
+                look.setLikeCount(look.getLikeCount() + 1);
             }
         } else {
-            likes = likesRepository.save(Likes.of(false, user, look));
+            likes = likesRepository.save(Likes.of(true, user, look));
+            look.setLikeCount(look.getLikeCount() + 1);
         }
         return LikesDto.of(look.getLikeCount(), likes.isLikeStatus());
     }

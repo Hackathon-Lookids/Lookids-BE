@@ -64,27 +64,31 @@ public class S3Util {
         int millis = now.get(ChronoField.MILLI_OF_SECOND);
 
         List<String> imageUrlList = new ArrayList<>();
-        for (MultipartFile image : multipartFileList) {
-            System.out.println("image.toString()" + image.toString());
-
+        if (multipartFileList == null) {
+            return null;
+        } else {
+            for (MultipartFile image : multipartFileList) {
+                if (image == null || image.isEmpty()) {
+                    imageUrlList.add(null);
+                } else {
 //            String imageName = "image" + hour + minute + second + millis;
-            String imageName = "image" + UUID.randomUUID();
-            String fileExtension = '.' + image.getOriginalFilename().replaceAll("^.*\\.(.*)$", "$1");
-            String fullImageName = "S3" + imageName + fileExtension;
+                    String imageName = "image" + UUID.randomUUID();
+                    String fileExtension = '.' + image.getOriginalFilename().replaceAll("^.*\\.(.*)$", "$1");
+                    String fullImageName = "S3" + imageName + fileExtension;
 
-            System.out.println("fullImageName" + fullImageName);
+                    ObjectMetadata objectMetadata = new ObjectMetadata();
+                    objectMetadata.setContentType(image.getContentType());
+                    objectMetadata.setContentLength(image.getSize());
 
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentType(image.getContentType());
-            objectMetadata.setContentLength(image.getSize());
+                    InputStream inputStream = image.getInputStream();
 
-            InputStream inputStream = image.getInputStream();
+                    s3.putObject(new PutObjectRequest(bucketName, fullImageName, inputStream, objectMetadata)
+                            .withCannedAcl(CannedAccessControlList.PublicRead));
 
-            s3.putObject(new PutObjectRequest(bucketName, fullImageName, inputStream, objectMetadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-
-            imageUrlList.add(s3.getUrl(bucketName, fullImageName).toString());
+                    imageUrlList.add(s3.getUrl(bucketName, fullImageName).toString());
+                }
+            }
+            return imageUrlList;
         }
-        return imageUrlList;
     }
 }
