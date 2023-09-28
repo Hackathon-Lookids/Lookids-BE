@@ -29,7 +29,7 @@ public class Look extends AuditingEntity {
     @Enumerated(EnumType.STRING)
     private LookType lookType;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, length = 1500)
     @Convert(converter = StringListConverter.class)
     private List<String> imageUrls;
 
